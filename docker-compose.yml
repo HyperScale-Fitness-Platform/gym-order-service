@@ -1,0 +1,27 @@
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: gym_order
+    ports: ["5436:5432"]
+    volumes: ["db_data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d gym_order"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  app:
+    build: .
+    image: gym-order-service:local
+    depends_on:
+      db: { condition: service_healthy }
+    environment:
+      PORT: "3002"
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/gym_order
+      PGSSLMODE: disable
+      CATALOG_SERVICE_URL: http://host.docker.internal:3000
+    ports: ["3002:3002"]
+volumes:
+  db_data:
