@@ -1,0 +1,35 @@
+{
+  "info": {
+    "_postman_id": "gym-order-service-collection",
+    "name": "Order Service API",
+    "description": "Gym Order Service - customer carts, checkout, and order history",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3002", "type": "string" },
+    { "key": "customer_user_id", "value": "00000000-0000-0000-0000-000000000001", "type": "string" },
+    { "key": "admin_user_id", "value": "00000000-0000-0000-0000-000000000002", "type": "string" },
+    { "key": "product_id", "value": "", "type": "string" },
+    { "key": "order_id", "value": "", "type": "string" }
+  ],
+  "item": [
+    { "name": "Health", "item": [{ "name": "Health Check", "request": { "method": "GET", "url": "{{base_url}}/health" } }] },
+    { "name": "Cart", "item": [
+      { "name": "Get Active Cart", "request": { "method": "GET", "header": [{ "key": "user-id", "value": "{{customer_user_id}}" }, { "key": "user-role", "value": "customer" }], "url": "{{base_url}}/api/cart" } },
+      { "name": "Add Item", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "user-id", "value": "{{customer_user_id}}" }, { "key": "user-role", "value": "customer" }], "body": { "mode": "raw", "raw": "{\n  \"product_id\": \"{{product_id}}\",\n  \"quantity\": 2\n}" }, "url": "{{base_url}}/api/cart/items" } },
+      { "name": "Update Item Quantity", "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "user-id", "value": "{{customer_user_id}}" }, { "key": "user-role", "value": "customer" }], "body": { "mode": "raw", "raw": "{\n  \"quantity\": 3\n}" }, "url": "{{base_url}}/api/cart/items/{{product_id}}" } },
+      { "name": "Remove Item", "request": { "method": "DELETE", "header": [{ "key": "user-id", "value": "{{customer_user_id}}" }, { "key": "user-role", "value": "customer" }], "url": "{{base_url}}/api/cart/items/{{product_id}}" } },
+      { "name": "Clear Cart", "request": { "method": "DELETE", "header": [{ "key": "user-id", "value": "{{customer_user_id}}" }, { "key": "user-role", "value": "customer" }], "url": "{{base_url}}/api/cart" } }
+    ] },
+    { "name": "Orders", "item": [
+      { "name": "Checkout", "request": { "method": "POST", "header": [{ "key": "user-id", "value": "{{customer_user_id}}" }, { "key": "user-role", "value": "customer" }], "url": "{{base_url}}/api/orders/checkout" } },
+      { "name": "List My Orders", "request": { "method": "GET", "header": [{ "key": "user-id", "value": "{{customer_user_id}}" }, { "key": "user-role", "value": "customer" }], "url": "{{base_url}}/api/orders" } },
+      { "name": "Get My Order", "request": { "method": "GET", "header": [{ "key": "user-id", "value": "{{customer_user_id}}" }, { "key": "user-role", "value": "customer" }], "url": "{{base_url}}/api/orders/{{order_id}}" } },
+      { "name": "List Customer Orders (admin)", "request": { "method": "GET", "header": [{ "key": "user-id", "value": "{{admin_user_id}}" }, { "key": "user-role", "value": "admin" }], "url": "{{base_url}}/api/orders?customer_id={{customer_user_id}}" } }
+    ] },
+    { "name": "Validation and security", "item": [
+      { "name": "Invalid Quantity -> 400", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "user-id", "value": "{{customer_user_id}}" }, { "key": "user-role", "value": "customer" }], "body": { "mode": "raw", "raw": "{\n  \"product_id\": \"{{product_id}}\",\n  \"quantity\": 0\n}" }, "url": "{{base_url}}/api/cart/items" } },
+      { "name": "Get Another Customer Order -> 403", "request": { "method": "GET", "header": [{ "key": "user-id", "value": "00000000-0000-0000-0000-000000000099" }, { "key": "user-role", "value": "customer" }], "url": "{{base_url}}/api/orders/{{order_id}}" } }
+    ] }
+  ]
+}
