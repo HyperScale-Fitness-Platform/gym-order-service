@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: gym-order-postgres
+  namespace: gym-dev
+  labels: { app: gym-order-postgres, component: database, service: gym-order-postgres }
+spec:
+  serviceName: gym-order-postgres
+  replicas: 1
+  selector:
+    matchLabels: { app: gym-order-postgres, component: database }
+  template:
+    metadata:
+      labels: { app: gym-order-postgres, component: database, service: gym-order-postgres }
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          ports: [{ containerPort: 5432, name: postgres }]
+          envFrom: [{ secretRef: { name: postgres-secret } }]
+          env: [{ name: PGDATA, value: /var/lib/postgresql/data/pgdata }]
+          volumeMounts: [{ name: data, mountPath: /var/lib/postgresql/data }]
+  volumeClaimTemplates:
+    - metadata: { name: data, labels: { app: gym-order-postgres, component: database } }
+      spec:
+        accessModes: [ReadWriteOnce]
+        storageClassName: gp3
+        resources: { requests: { storage: 10Gi } }

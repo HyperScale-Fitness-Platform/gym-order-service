@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gym-order-service
+  namespace: gym-dev
+  labels:
+    app: gym-order-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gym-order-service
+  template:
+    metadata:
+      labels:
+        app: gym-order-service
+    spec:
+      initContainers:
+        - name: wait-for-postgres
+          image: busybox:1.35.0
+          command: ["sh", "-c", "until nc -z gym-order-postgres 15432; do echo waiting for postgres; sleep 2; done;"]
+      containers:
+        - name: app
+          image: <account-id>.dkr.ecr.<region>.amazonaws.com/gym-order-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3002
+              name: http
+          env:
+            - name: PORT
+              value: "3002"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: DATABASE_URL
+            - name: CATALOG_SERVICE_URL
+              value: http://gym-catalog-service:4005
+            - name: PGSSLMODE
+              value: "disable"
+          readinessProbe:
+            httpGet: { path: /health, port: 3002 }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /health, port: 3002 }
+            initialDelaySeconds: 15
+            periodSeconds: 20
